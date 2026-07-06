@@ -6,7 +6,7 @@
 **KR:** 제출 #279는 오픈소스 코퍼스(학습 split)와 표준 증강만으로 학습했다. REAL-T/REAL-TSE 챌린지 DEV·EVAL 오디오는 검증/테스트에만 사용했고 **학습 데이터로는 전혀 쓰지 않았다**(발화 길이 메타데이터만 length-matching에 활용). 화자임베딩·DNSMOS 구성요소는 모두 **학습시점 손실**이며 배포 네트워크에 포함되지 않는다(추론·지연·제출 가중치에 무영향).
 
 ## Warm-start lineage (#279)
-Public USEF-TSE (USEF-TFGridNet, WHAM! variant) → REAL-T 16k fine-tune → causal/F1 fine-tune (v3combo, ep71) → bidirectional→block-online conversion (`blockbi_init_ep71_W24`, 100% verbatim weight transfer) → b5 (Libri2Mix train-clean-100, 4 s) → **#279 `usef_b5_dnsmos17s`** (campaign_v2_matchlen 17 s + differentiable DNSMOS surrogate + ECAPA + energy losses).
+Public USEF-TSE (USEF-TFGridNet, WHAM! variant) → 16 kHz adaptation fine-tune (AliMeeting training-partition data; internal run name `usef_realt_16k`, where "realt" is a project prefix, not REAL-T corpus audio) → F1 fine-tune (v3combo, ep71) → bidirectional→block-online conversion (`blockbi_init_ep71_W24`, 100% verbatim weight transfer) → b5 (Libri2Mix train-clean-100, 4 s) → **#279 `usef_b5_dnsmos17s`** (campaign_v2_matchlen 17 s + differentiable DNSMOS surrogate + ECAPA + energy losses).
 
 ## A. Datasets
 | # | Dataset (role) | Source & citation | License | Split |
@@ -20,13 +20,13 @@ Public USEF-TSE (USEF-TFGridNet, WHAM! variant) → REAL-T 16k fine-tune → cau
 | A3 | RIRS_NOISES (simulated_rirs) — reverb aug | Ko et al. 2017, OpenSLR SLR28 | Apache-2.0 | — |
 | A4 | Libri2Mix train-clean-100 — b5-stage fine-tune | Cosentino et al. 2020, arXiv:2005.11262 (over LibriSpeech) | CC BY 4.0 | train-clean-100 |
 | A5 | WHAM! — base-checkpoint pretraining (via B1) | Wichern et al. Interspeech 2019 (WSJ0-2mix + WHAM noise) | WHAM! CC BY-NC 4.0; WSJ0 LDC | — |
-| A6 | usef_realt_scp / v3combo — REAL-T-derived fine-tune (16k + f1ft stages) | REAL-T-derived FT material | challenge | **train** (v3combo: 493 speakers / 6,000 mixtures from AliMeeting + AMI training splits) |
+| A6 | 16k-adaptation set (simulated near-field mixtures + AliMeeting far-field training recordings) and v3combo (493 speakers / 6,000 mixtures) — our derived fine-tune sets; "realt" in internal names is a project prefix, no REAL-T corpus audio | this work, derived from AliMeeting / AMI training splits | inherits source licenses | **train** |
 | A7 | REAL-T / REAL-TSE DEV (1991) / EVAL (5000) | organizer-provided real conversational data | challenge | **VALIDATION/TEST ONLY — never trained on (length metadata only)** |
 
 ## B. Pretrained models
 | # | Model (role in #279) | Identity / source & citation | License |
 |---|---|---|---|
-| B1 | **USEF-TSE / USEF-TFGridNet** — warm-start base of the whole chain = the public **8 kHz USEF-TFGridNet release (WHAM! variant)**, fine-tuned to 16 kHz and then to REAL-T in our chain (exact variant fixed by our configs) | HF `ZBang/USEF-TSE`; USEF-TSE, Zeng et al., **arXiv:2409.02615** | **CC BY-NC 4.0** (verified via repo README) |
+| B1 | **USEF-TSE / USEF-TFGridNet** — warm-start base of the whole chain = the public **8 kHz USEF-TFGridNet release (WHAM! variant)**, fine-tuned to 16 kHz on AliMeeting training-partition data in our chain (exact variant fixed by our configs) | HF `ZBang/USEF-TSE`; USEF-TSE, Zeng et al., **arXiv:2409.02615** | **CC BY-NC 4.0** (verified via repo README) |
 | B2 | **ECAPA-TDNN** `speechbrain/spkrec-ecapa-voxceleb` — frozen speaker-cosine loss (train-time only, not saved) | Desplanques et al. 2020; SpeechBrain, Ravanelli et al. 2021 | Apache-2.0 |
 | B3 | **Microsoft DNSMOS** `sig_bak_ovr.onnx` (P.835) — differentiable surrogate loss (train-time only, not saved) | Reddy et al. 2022 "DNSMOS P.835" (ICASSP), DNS-Challenge; md5 `f79cd6a01fe88edc124df774008a926e` | DNS-Challenge / Microsoft (research) |
 
